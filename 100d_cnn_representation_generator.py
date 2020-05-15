@@ -61,8 +61,7 @@ def TextCNN(embedding_matrix, sequence_length, num_classes, vocab_size,
     return model
 
 X, y = load_data_and_labels()
-
-# Split train & test
+print(X)# Split train & test
 text_train, text_test, y_train, y_test = train_test_split(X, y, test_size=0.05, random_state=42)
 
 #create class weight dict
@@ -73,6 +72,7 @@ num_labels = len(np.unique(y))
 tokenizer = Tokenizer()
 tokenizer.fit_on_texts(text_train)
 X_train = tokenizer.texts_to_sequences(text_train)
+print(X_train)
 x_test = tokenizer.texts_to_sequences(text_test)
 
 word_index = tokenizer.word_index
@@ -95,6 +95,7 @@ vocab_size = len(word_index) + 1
 max_document_length = max([len(x.split(" ")) for x in X])
 # vocab_processor = learn.preprocessing.VocabularyProcessor(max_document_length)
 
+print(len(X_train))
 def transform(raw_documents):
     """Transform documents to word-id matrix.
     Convert words to ids with vocabulary fitted with fit or the one
