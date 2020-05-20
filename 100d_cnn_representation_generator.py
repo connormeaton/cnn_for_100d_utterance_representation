@@ -63,6 +63,8 @@ def TextCNN(embedding_matrix, sequence_length, num_classes, vocab_size,
 X, y = load_data_and_labels()
 print(X)# Split train & test
 text_train, text_test, y_train, y_test = train_test_split(X, y, test_size=0.05, random_state=42)
+# raw_text_train, raw_text_test, raw_y_train, raw_y_test = train_test_split(raw_text, y, test_size=0.05, random_state=42)
+
 
 #create class weight dict
 class_weights = class_weight.compute_class_weight('balanced', np.unique(y_train), y_train)
@@ -70,14 +72,14 @@ class_weights_d = dict(enumerate(class_weights))
 num_labels = len(np.unique(y))
 
 tokenizer = Tokenizer()
-tokenizer.fit_on_texts(text_train)
+tokenizer.fit_on_texts(X)
 X_train = tokenizer.texts_to_sequences(text_train)
 print(X_train)
 x_test = tokenizer.texts_to_sequences(text_test)
 
 word_index = tokenizer.word_index
 vocab_size = len(word_index) + 1  # Adding 1 because of reserved 0 index
-maxlen = max(len(x) for x in X_train) # longest text in train set
+maxlen = max(len(x) for x in X) # longest text in train set
 # maxlen = 100 # or fixed length for improved efficiency
 print('vocabubary size:',vocab_size)
 print('max length text:',maxlen)
@@ -85,17 +87,19 @@ print('max length text:',maxlen)
 # pad sequences to uniform length
 X_train = pad_sequences(X_train, padding='post', maxlen=maxlen)
 x_test = pad_sequences(x_test, padding='post', maxlen=maxlen)
+# X = pad_sequences(X, padding='post', maxlen=maxlen)
+
 # convert int labels to binary array
 y_train = (y_train[:,None] == np.unique(y_train)).astype(int)
 y_test = (y_test[:,None] == np.unique(y_test)).astype(int)
+# y = (y[:,None] == np.unique(y)).astype(int)
 
 embedding_dim = 300
 embedding_path = "/Users/asi/connor_asi/embeddings/glove.6B/glove.6B.300d.word2vec.txt"
 vocab_size = len(word_index) + 1
-max_document_length = max([len(x.split(" ")) for x in X])
+max_document_length = max([len(x.split(" ")) for x in text_train])
 # vocab_processor = learn.preprocessing.VocabularyProcessor(max_document_length)
 
-print(len(X_train))
 def transform(raw_documents):
     """Transform documents to word-id matrix.
     Convert words to ids with vocabulary fitted with fit or the one
@@ -113,20 +117,20 @@ def transform(raw_documents):
             word_ids[idx] = vocabulary_.get(token)
         yield word_ids
 
-vocab_processor = transform(max_document_length)
+vocab_processor = transform(maxlen)
 
-# # load the whole embedding into memory
-# embeddings_index = dict()
-# print(f'loading vectors from {embedding_path}')
-# f = open(embedding_path)
-# for line in f:
-# 	values = line.split()
-# 	word = values[0]
-# 	coefs = np.asarray(values[1:], dtype='float32')
-# 	embeddings_index[word] = coefs
-# f.close()
+# load the whole embedding into memory
+embeddings_index = dict()
+print(f'loading vectors from {embedding_path}')
+f = open(embedding_path)
+for line in f:
+	values = line.split()
+	word = values[0]
+	coefs = np.asarray(values[1:], dtype='float32')
+	embeddings_index[word] = coefs
+f.close()
 
-# pickle.dump(embeddings_index, open( "/Users/asi/connor_asi/embeddings/300d_glove_trained_on_spaff.pkl", "wb" ) )
+pickle.dump(embeddings_index, open( "/Users/asi/connor_asi/embeddings/300d_glove_trained_on_spaff.pkl", "wb" ) )
 embeddings_index = pickle.load(open("/Users/asi/connor_asi/embeddings/300d_glove_trained_on_spaff.pkl", "rb"))
 
 print('Loaded %s word vectors.' % len(embeddings_index))
@@ -145,7 +149,7 @@ print(nonzero_elements / vocab_size)
 
 model = TextCNN(embedding_matrix, sequence_length=maxlen, num_classes=11, vocab_size=vocab_size, 
         embedding_size=embedding_dim, filter_sizes=[3,4,5], num_filters=50)
-model.fit(X_train[:10], y_train[:10])
+model.fit(X_train, y_train)
 extractor = Model(model.input, model.get_layer('extractor').output)
 
 representation = extractor.predict(X_train)
@@ -154,7 +158,13 @@ print(representation[0].shape)
 print(representation.shape)
 
 np.savetxt('100d_utterance_representations.csv', representation, delimiter=',')
+
 test = np.loadtxt('100d_utterance_representations.csv', delimiter=',')
 print(len(test))
 print(test[0].shape)
 print(test.shape)
+
+# zipped_data = list(zip(test, raw_text_train, y_train))
+# df = pd.DataFrame(zipped_data)
+# print(df)
+# df.to_csv('utterances_with_100d.csv')

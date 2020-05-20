@@ -57,7 +57,6 @@ def clean_str(string):
     # # Load data from files
     # with open('/Users/asi/connor_asi/iemocap_data/train/sentences.pkl', 'rb') as f:
     #     data = pickle.load(f, encoding="latin1")
-
     # prepared_data = []
     # for i in data:
     #     for j in i:
@@ -76,11 +75,9 @@ def clean_str(string):
     #         # sent = sent.replace("do n't", "dont")
     #         sent = sent.rstrip()
     #         prepared_data.append(sent)
-
     # # generate labels
     # with open('/Users/asi/connor_asi/iemocap_data/train/labels.pkl', 'rb') as f:
     #     labels = pickle.load(f, encoding="latin1")
-
     # prepared_labels = [item for sublist in labels for item in sublist]
     # df = pd.DataFrame(prepared_labels)
     # y = pd.get_dummies(df[0]).values
@@ -110,7 +107,6 @@ def load_data_and_labels():
     def clean_spaff_str(string):
         """
         SLIGHTLY EDITED: 05-06-2020 for SPAFF
-
         Tokenization/string cleaning for all datasets except for SST.
         Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
         """
